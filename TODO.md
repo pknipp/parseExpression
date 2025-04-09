@@ -1,0 +1,22 @@
+- translate js to ts
+- ensure that important helpers can be run locally
+- compile list of Math methods with simple signature: # in and # out.
+- steps in algo, which'll call parseFn (described below):
+  - parameters:
+    - "fnStr": string that represents the function
+    - "varArr": array of n strings, each representing a variable
+    - "startArr": n-element array that contains start values for minimization
+  - return:
+    - minimum value
+    - number of iterations required to reach that value
+    - error message?
+  - parseFn:
+    - parameters:
+      - "fnStr" and "varArr": See above.
+      - "xArr": n-element array of floats
+    - return: value (and error message?)
+    - algo
+      - In fnStr, replace each var with a paren-enclosed #.
+      - Copy-pasta implementation of complex-calculator, and simplify as follows:
+        - Ignore units
+        - Ignore non-real possibilities
