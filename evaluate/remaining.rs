@@ -1,45 +1,5 @@
-use std::f64::consts::PI;
 
-pub const INSTRUCTIONS: &str = "WELCOME TO MY CALCULUS APP";
-
-const FUNCTION: &str = "The function may be any algebraically legal combination of the variable letter(s), numbers, parentheses, and/or binary operations +, -, *, ** (encouraged) or ^ (discouraged), PI and/or the most common unary functions: <tt>abs, acos, acosh, acot, acoth, acsc, acsch, asec, asech, asin, asinh, atan, atanh, cbrt, ceil, cos, cot, csc, exp, exp2, exp_m1, floor, fract, ln, ln_1p, log10, log2, round, sec, signum, sin, sqrt, tan, and trunc</tt>.  (See <a href='https://doc.rust-lang.org/std/primitive.f64.html'>docs</a> for more information.) To represent division you must use either <tt>div, DIV, d, or D</tt> because the usual division symbol (<tt>/</tt>) has special meaning in a url.  Implied multiplication is allowed.  Spaces are allowed but discouraged.";
-
-pub const NOTE1: &str = "The construction rules for the values of any variable in the url";
-pub const NOTE2: &str = " are the same as those for the function except - of course - it cannot include the letter which represents the variable.";
-
-pub struct LongPage {
-	pub title: String,
-	pub links: String,
-	pub instructions: String,
-	pub note: String,
-	pub example: String,
-	pub algorithm: String,
-	pub json: String,
-}
-
-pub fn format(long_page: LongPage) -> String {
-	format!(
-		"<div style=\"padding-top: 5px; padding-left: 20px; padding-right: 20px;\"><p align=center>{}<br/><br/>{}</p>{} {}<br/>{}<br/><b>example:</b>{}<br/><b>algorithms:</b> {}<br/><b>json:</b> {}</div>",
-		long_page.title,
-		long_page.links,
-		long_page.instructions,
-		FUNCTION,
-		long_page.note,
-		long_page.example,
-		long_page.algorithm,
-		long_page.json,
-	)
-}
-
-// precedence of binary operations
-fn prec(op: &char) -> i32 {
-	match op {
-		'+'|'-' => 0,
-		'*'|'/' => 1,
-		'^' => 2,
-		_ => unreachable!(),
-	}
-}
+const PI = 3.14159...
 
 pub fn preparse (expression: &mut String, x: f64) {
 	*expression = expression.to_lowercase();
@@ -50,24 +10,19 @@ pub fn preparse (expression: &mut String, x: f64) {
 	*expression = str::replace(&expression, "exp", &"EXP".to_string());
 	*expression = str::replace(&expression, "x", &format!("({})", x));
 	*expression = str::replace(&expression, "EXP", &"exp".to_string());
-}
 
-pub fn function1(mut expression: String, x: f64) -> Result<f64, String> {
-	preparse(&mut expression, x);
-	parse_expression(expression.to_string())
-}
+	expression = str::replace(&expression, "pi", &format!("({})", PI)); // important constant
+  	for stri in ["div", "DIV", "d", "D"] {
+    	expression = str::replace(&expression, stri, "/"); // division operation is a special URL char
+  	}
+	expression = str::replace(&expression, "**", "^"); // in case user chooses ^ instead of **
 
-pub fn function2(mut expression: String, x: f64, t: f64) -> Result<f64, String> {
-	preparse(&mut expression, x);
-	expression = str::replace(&expression, "t", &format!("({})", t).to_string());
-	parse_expression(expression.to_string())
-}
-
-pub fn function3(mut expression: String, x: f64, t: f64, v: f64) -> Result<f64, String> {
-	preparse(&mut expression, x);
-	expression = str::replace(&expression, "t", &format!("({})", t).to_string());
-	expression = str::replace(&expression, "v", &format!("({})", v).to_string());
-	parse_expression(expression.to_string())
+	if !expression.is_empty() {
+		// leading "+" may be trimmed thoughtlessly
+		if expression.starts_with('+') {
+			expression.remove(0);
+		}
+	}
 }
 
 fn find_size (expression: &str) -> Result<usize, String> {
@@ -161,42 +116,8 @@ fn get_value(expression: &mut String) -> Result<f64, String> {
 	Ok(value)
 }
 
-fn binary(x1: f64, op: &char, x2: f64) -> Result<f64, String> {
-	let x = match op {
-		'+' => x1 + x2,
-		'-' => x1 - x2,
-		'*' => x1 * x2,
-		'/' => {
-			if x2 == 0. {
-				return Err(format!("Error: {}/0 signifies an attempt to divide by zero", x1));
-			}
-			x1 / x2
-		},
-		'^' => {
-			if x2 <= 0. && x1 == 0. {
-				return Err(format!("Error: {}^0 is ill-defined.", x1));
-			}
-			x1.powf(x2)
-		},
-		_ => unreachable!(),
-	};
-	Ok(x)
-}
-
 pub fn parse_expression(mut expression: String) -> Result<f64, String> {
-	preparse(&mut expression, 0.);
-	expression = str::replace(&expression, "pi", &format!("({})", PI)); // important constant
-  	for stri in ["div", "DIV", "d", "D"] {
-    	expression = str::replace(&expression, stri, "/"); // division operation is a special URL char
-  	}
-	expression = str::replace(&expression, "**", "^"); // in case user chooses ^ instead of **
 
-	if !expression.is_empty() {
-		// leading "+" may be trimmed thoughtlessly
-		if expression.starts_with('+') {
-			expression.remove(0);
-		}
-	}
 	// Elements of these two vectors are interleaved: val/op/val/op.../op/val
 	let mut vals = vec![];
 	let mut ops = vec![];
@@ -216,31 +137,7 @@ pub fn parse_expression(mut expression: String) -> Result<f64, String> {
 			Ok(value) => value,
 		});
 	}
-	// loop thru "ops" vector, evaluating operations in order of their precedence
-	while !ops.is_empty() {
-		let mut index = 0;
-		while ops.len() > index {
-			if index < ops.len() - 1 && prec(&ops[index]) < prec(&ops[index + 1]) {
-				// postpone this operation because of its lower prececence
-				index += 1;
-			} else {
-				// perform this operation NOW, because of PEMDAS rule
-				match binary(vals[index], &ops[index], vals[index + 1]) {
-					Err(message) => return Err(message),
-					Ok(result) => {
-						// mutate vals & ops (including the shortening of both by one)
-						vals[index] = result;
-						ops.remove(index);
-						vals.remove(index + 1);
-					},
-				};
-				// Start another loop thru the expression, ISO high-precedence operations.
-				index = 0;
-			}
-		}
-	}
-	Ok(vals[0]) // what remains after ops vector is emptied
-}
+	// now invoke evalEMDAS
 
 fn is_nonzero(x: f64) -> Result<f64, String> {
 	if x == 0. {Err("Error: divide by zero".to_string())} else {Ok(x)}
