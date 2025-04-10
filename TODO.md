@@ -1,6 +1,10 @@
 - translate js to ts
 - ensure that important helpers can be run locally
-- compile list of Math methods with simple signature: # in and # out.
+- binary operations to include:
+    - addition (+), subtraction (-), modulo (%)
+    - multiplication (* or implied)
+    - division (d, D, div, or DIV)
+    - exponentiation (** or ^ ?)
 - steps in algo, which'll call parseFn (described below):
   - parameters:
     - "fnStr": string that represents the function
@@ -12,11 +16,19 @@
     - error message?
   - parseFn:
     - parameters:
-      - "fnStr" and "varArr": See above.
-      - "xArr": n-element array of floats
+      - "fnStr" and "vars": See above.
+      - "xs": n-element array of floats
     - return: value (and error message?)
     - algo
-      - In fnStr, replace each var with a paren-enclosed #.
+      - In fnStr, replace each var with a paren-enclosed #. (DONE)
       - Copy-pasta implementation of complex-calculator, and simplify as follows:
         - Ignore units
         - Ignore non-real possibilities
+  - parseExpr:
+    - input: expr
+    - output: number and new expr
+    - it calls getValue when it encounters a "(" or a letter (signifying unary)
+  - getValue:
+    - input: expr
+    - output: number (and shortened expr)
+    - If the first char is a number, it returns that.  If the first char is a "(" or a letter, that triggers a recursive call to parseExpr.
