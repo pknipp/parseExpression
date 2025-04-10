@@ -5,18 +5,6 @@ const result = {
 
 const splitAtStart = str => [str[0], str.slice(1)];
 
-const findSize = expr => {
-	// The leading (open)paren has been found by calling function.
-	let nParen = 1;
-	for (let size = 0; i < expr.length; i++) {
-		const char = expr[i];
-		if (char === "(") nParen++;
-		if (char === ")") nParen--;
-		if (!nParen) return {i;
-	}
-	return "No closing parenthesis was found for this string: (" + expression
-}
-
 const evalFn = (fnStr, vars, xs) => {
 	if (vars.length !== xs.length) {
 		result.message = "vars.length and xs.length are not the same length.";

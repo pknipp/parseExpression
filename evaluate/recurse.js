@@ -1,3 +1,4 @@
+// This declaration hoisting is needed because of this fn's recursive call in getValue.
 let loadEMDAS;
 
 const isNumeric = str => {
@@ -5,18 +6,34 @@ const isNumeric = str => {
 	return !isNaN(num) && isFinite(num);
 }
 
+const findSize = expr => {
+	// The leading (open)paren has been found by calling function.
+	let nParen = 1;
+	for (let size = 0; size < expr.length; size++) {
+		const char = expr[size];
+		if (char === "(") nParen++;
+		if (char === ")") nParen--;
+		if (!nParen) return {size};
+	}
+	return {message: `No closing parenthesis was found for string: (${expr}`};
+}
+
+const str = "(a)";
+console.log("str/findSize(str) = ", str, findSize(str));
+
 const getValue = expressionIn => {
 	if (!expressionIn) return {message: "Your expression truncates prematurely."};
 	let expression = expressionIn;
-	let p = 0; // index which tracks progress thru expression
+	// TO: following is only one if-block.  Other two are parens and unaries.
+	let p = 1; // index which tracks progress thru expression
 	let xStr, value;
-	while (p < expression.length) {
-		p++;
+	while (p <= expression.length) {
 		xStr = expression.slice(0, p);
 		if (!['.', '-', '-.'].includes(xStr)) { // It's OK to parse for a #.
 			if (!isNumeric(xStr)) break;
 			value = Number(xStr);
 		}
+		p++;
 	}
 	if (value === undefined) return {
 		message: `cannot find a number when parsing ${expression} from left to right`,
@@ -25,40 +42,34 @@ const getValue = expressionIn => {
 	return {value, expression};
 }
 
-loadEMDAS = expression => {
+// const str = "-12.34abc";
+// console.log("str/getValue(str) = ", str, getValue(str));
 
-	// if x.starts_with("-") && p == 2 && expression.len() > 1 { // examples of this edge case: -sin(x) or -(x+1)**2
-		// value = -1.;
-		// found_value = true;
-	// }
-//
-	// preparse(&mut expression, 0.);
-	// expression = str::replace(&expression, "pi", &format!("({})", PI)); // important constant
-  	// for stri in ["div", "DIV", "d", "D"] {
-    	// expression = str::replace(&expression, stri, "/"); // division operation is a special URL char
-  	// }
-	// expression = str::replace(&expression, "**", "^"); // in case user chooses ^ instead of **
-//
-//
-	// Elements of these two vectors are interleaved: val/op/val/op.../op/val
-	// let mut vals = vec![];
-	// let mut ops = vec![];
-	// trim & push leading number from expression
-	// vals.push(match get_value(&mut expression) {
-		// Err(message) => return Err(message),
-		// Ok(value) => value,
-	// });
-	// let op_string = "+-*/^";
-	// loop thru the expression, while trimming & pushing operation/number pairs
-	// while !expression.is_empty() {
-		// let op = expression.chars().next().unwrap();
-		// The following ternary includes an implied multiplication, if appropriate.
-		// ops.push(if op_string.contains(op) {expression.remove(0)} else {'*'});
-		// vals.push(match get_value(&mut expression) {
-			// Err(message) => return Err(message),
-			// Ok(value) => value,
-		// });
+loadEMDAS = expressionIn => {
+	if (!expressionIn) return {message: "Expression is empty."};
+	let expression = expressionIn;
+	// The following changes corner cases like -(2+3) to 0-(2+3)
+	if (expression[0] === "-") expression = "0" + expression;
+	// Elements of these two arrays are interleaved: val/op/val/op.../op/val
+	const [vals, ops] = [[], []];
+	let result = getValue(expression);
+	if (result.message) return result;
+	vals.push(result.value);
+	expression = result.expression;
+	console.log(vals, ops);
+	while (expression) {
+		let [char, i] = [expression[0], 1];
+		// The following handles implied multiplication.
+		if (char === "(") [char, i] = ["*", 0];
+		ops.push(char);
+		expression = expression.slice(j);
+		result = getValue(expression);
+		if (result.message) return result;
+		vals.push(result.value);
+		expression = result.expression;
+	}
+	return {vals, ops};
 }
 
-const str = "-12.34abc";
-console.log("str/getValue(str) = ", str, getValue(str));
+// const str = "-1.2+3.4*5.6-7.8^9";
+// console.log("str/loadEMDAS(str) = ", str, loadEMDAS(str));
