@@ -15,7 +15,7 @@ const binary = (x1, op, x2) => {
     return {message: `no such op: ${op}`};
 }
 
-const evalEMDAS = (opsIn, valsIn) => {
+const evalEMDAS = (valsIn, opsIn) => {
     let [ops, vals] = [[...opsIn], [...valsIn]];
     if (ops.length !== valsIn.length - 1) return {message: "array-length mismatch"};
     let index = 0;
@@ -33,7 +33,8 @@ const evalEMDAS = (opsIn, valsIn) => {
             index -= (index ? 1 : 0);
         }
     }
-    return vals[0];
+    return {value: vals[0]};
 }
 
-console.log("5 = ", evalEMDAS(['+', '*', '-', '^', '/'], [7, 6, 5, 4, 3, 2]), "?");
+// console.log("5 = ", evalEMDAS(['+', '*', '-', '^', '/'], [7, 6, 5, 4, 3, 2]), "?");
+module.exports = { evalEMDAS };

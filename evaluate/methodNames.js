@@ -1,4 +1,4 @@
-const methods = [
+const methodNames = [
     "abs",
     "acos",
     "acosh",
@@ -36,3 +36,4 @@ const methods = [
     "tanh",
     "trunc",
 ];
+module.exports = { methodNames };
