@@ -22,10 +22,14 @@ const processArg = expr => {
 		if (char === ")") nParen--;
 		if (!nParen) {
 			const [arg, expression] = [expr.slice(1, i), expr.slice(i + 1)];
+			console.log("processArg: arg/expression = ", arg, expression);
 			let result = loadEMDAS(arg);
+			console.log("27: result = ", result);
 			if (result.message) return result;
+			console.log("29: result = ", result);
 			const {vals, ops} = result;
 			result = evalEMDAS(vals, ops);
+			console.log("32: result = ", result);
 			if (result.message) return result;
 			const {value} = result;
 			return {value: result.value, expression};
@@ -38,11 +42,14 @@ const getValue = expressionIn => {
 	if (!expressionIn) return {message: "Your expression truncates prematurely."};
 	let expression = expressionIn;
 	if (methodLetters.has(expression[0])) {
+		console.log("top of method arm: expression = ", expression);
 		let parts = expression.split("(");
 		const methodName = parts[0];
-		let expression = parts.slice(1).join("(");
+		expression = parts.slice().join("(");
 		let result = processArg(expression);
-		if (result) return result.message;
+		console.log("result = ", result);
+		if (result.message) return result.message;
+		console.log("methodName/result.value = ", methodName, result.value);
 		return {
 			value: Math[methodName](result.value),
 			expression: result.expression,
@@ -50,6 +57,7 @@ const getValue = expressionIn => {
 	} else if (expression[0] === "(") {
 		let result = processArg(expression);
 		if (result.message) return result;
+		console.log("result.value = :", result.value);
 		return {
 			value: result.value,
 			expression: result.expression,
@@ -98,6 +106,6 @@ const loadEMDAS = expressionIn => {
 	return {vals, ops};
 }
 
-const str = "1+2(-(3+1)^2)-5";
+const str = "1+2(-exp(3+1)^2)-5";
 const {vals, ops} = loadEMDAS(str);
 console.log("str/evalEMDAS = ", str, evalEMDAS(vals, ops));
