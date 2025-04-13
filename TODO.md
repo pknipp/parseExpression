@@ -1,4 +1,5 @@
 - translate js to ts
 - convert to object-orientation
+- move object-destructuring out of code and into function's parameter listings.
 - enable and/or require use of bracket and brace
 - make this an npm module
