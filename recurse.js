@@ -39,21 +39,12 @@ const getValue = expressionIn => {
 	if (methodLetters.has(expression[0])) {
 		let parts = expression.split("(");
 		const methodName = parts[0];
-		expression = parts.slice(1).join("(");
-		let result = processArg(expression);
-		if (result.message) return result.message;
-		return {
-			value: Math[methodName](result.value),
-			expression: result.expression,
-		};
-	} else if (expression[0] === "(") {
-		expression = expression.slice(1);
-		let result = processArg(expression);
+		let result = processArg(parts.slice(1).join("("));
 		if (result.message) return result;
-		return {
-			value: result.value,
-			expression: result.expression,
-		};
+		result.value = Math[methodName](result.value);
+		return result;
+	} else if (expression[0] === "(") {
+		return processArg(expression.slice(1));
 	} else {
 		let p = 1; // index which tracks progress thru expression
 		let xStr, value;
@@ -95,12 +86,8 @@ const loadEMDAS = expressionIn => {
 		vals.push(result.value);
 		expression = result.expression;
 	}
-	console.log("99: {vals, ops} = ", {vals, ops});
 	return {vals, ops};
 }
 
 const str = "1+2(exp(3+1)^2)-5";
-const result = loadEMDAS(str);
-console.log("105: result = ", result);
-const {vals, ops} = result;
-console.log("str/evalEMDAS = ", str, evalEMDAS(result));
+console.log("str/evalEMDAS = ", str, evalEMDAS(loadEMDAS(str)));
