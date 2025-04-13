@@ -24,8 +24,7 @@ const processArg = expr => {
 			const [arg, expression] = [expr.slice(0	, i), expr.slice(i + 1)];
 			let result = loadEMDAS(arg);
 			if (result.message) return result;
-			const {vals, ops} = result;
-			result = evalEMDAS({vals, ops});
+			result = evalEMDAS(result);
 			if (result.message) return result;
 			const {value} = result;
 			return {value: result.value, expression};
@@ -100,7 +99,7 @@ const loadEMDAS = expressionIn => {
 	return {vals, ops};
 }
 
-const str = "(3+1)^2"; //"1+2(exp(3+1)^2)-5";
+const str = "1+2(exp(3+1)^2)-5";
 const result = loadEMDAS(str);
 console.log("105: result = ", result);
 const {vals, ops} = result;

@@ -15,9 +15,8 @@ const binary = (x1, op, x2) => {
     return {message: `no such op: ${op}`};
 }
 
-const evalEMDAS = (result) => {
-    console.log("19: result = ", result);
-    const {ops: opsIn, vals: valsIn} = result;
+const evalEMDAS = valsAndOps => {
+    const {ops: opsIn, vals: valsIn} = valsAndOps;
     let [ops, vals] = [[...opsIn], [...valsIn]];
     if (ops.length !== valsIn.length - 1) return {message: "array-length mismatch"};
     let index = 0;
