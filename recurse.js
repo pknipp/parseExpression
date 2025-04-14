@@ -20,16 +20,17 @@ const processArg = expr => {
 			return {...evalEMDAS(loadEMDAS(arg)), expression};
 		}
 	}
-	return {message: `No closing parenthesis was found for string: (${expr}`};
+	return {error: `No closing parenthesis was found for string: (${expr}`};
 }
 
 const getValue = expression => {
-	if (!expression) return {message: "Your expression truncates prematurely."};
+	if (!expression) return {error: "Your expression truncates prematurely."};
 	if (methodLetters.has(expression[0])) {
 		let parts = expression.split("(");
 		const name = parts[0];
+		if (!methods.hasOwnProperty(name)) return {error: `unknown function: ${name}.`};
 		let result = processArg(parts.slice(1).join("("));
-		if (result.message) return result;
+		if (result.error) return result;
 		result.value = methods[name](result.value).value;
 		return result;
 	} else if (expression[0] === "(") {
@@ -46,7 +47,7 @@ const getValue = expression => {
 			p++;
 		}
 		if (value === undefined) return {
-			message: `cannot find a number when parsing ${expression} from left to right`,
+			error: `cannot find a number when parsing ${expression} from left to right`,
 		}
 		expression = expression.slice(p - 1);
 		return {value, expression};
@@ -54,14 +55,14 @@ const getValue = expression => {
 }
 
 const loadEMDAS = expression => {
-	if (!expression) return {message: "Expression is empty."};
+	if (!expression) return {error: "Expression is empty."};
 	expression = expression.split("PI").join(`(${PI})`);
 	// The following changes corner cases like -(2+3) to 0-(2+3)
 	if (expression[0] === "-") expression = "0" + expression;
 	// Elements of these two arrays are interleaved: val/op/val/op.../op/val
 	const [vals, ops] = [[], []];
 	let result = getValue(expression);
-	if (result.message) return result;
+	if (result.error) return result;
 	vals.push(result.value);
 	expression = result.expression;
 	while (expression) {
@@ -71,12 +72,12 @@ const loadEMDAS = expression => {
 		ops.push(char);
 		expression = expression.slice(i);
 		result = getValue(expression);
-		if (result.message) return result;
+		if (result.error) return result;
 		vals.push(result.value);
 		expression = result.expression;
 	}
 	return {vals, ops};
 }
 
-const str = "acsch(0)";
+const str = "san(0)";
 console.log("str/evalEMDAS = ", str, evalEMDAS(loadEMDAS(str)));
