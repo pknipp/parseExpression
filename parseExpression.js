@@ -12,16 +12,22 @@ const binary = (x1, op, x2) => {
     if (op === '*') return {value: x1 * x2};
     if (op === '/') {
         const result = {value: x1 / x2};
-        const warning = (x2) ? {} : {warning: `divide by zero: ${x1} / 0`};
+        const warning = x2 ? {} : {warning: `${x1}/${x2} = ${result.value}`};
         return {...result, ...warning};
     }
     if (op === "^") {
-        if (x1) return {value: x1 ** x2};
-        if (!x1 && x2 > 0) return {value: 0};
-        if (x1 > 0) return {value: x1 ** x2};
-        if (!x1 && x2 ) return {message: `meaningless operation: ${x1} ^ 0`};
+        let warning = `(${x1}) ** ${x2} `;
+        const result = {value: x1 ** x2};
+        warning = (!x1 && x2 < 0)
+            ? {warning: warning + `${result.value}`}
+                : (x1 < 0 && !Number.isInteger(x2))
+                ? {warning: warning + `{result.value}`}
+                    : (!x1 && !x2)
+                    ? {warning: warning + "is ambiguous."}
+                        : {};
+        return {...result, ...warning};
     }
-    return {message: `no such op: ${op}`};
+    return {error: `no such op: ${op}`};
 }
 
 class ParseExpression {
@@ -50,7 +56,7 @@ class ParseExpression {
                     return this;
                 }
                 argExpression.evalEMDAS();
-                this.warning = (argExpression.warning || "");
+                this.warning += (argExpression.warning || "");
                 if (argExpression.error) {
                     this.error = argExpression.error;
                     return this;
@@ -81,8 +87,9 @@ class ParseExpression {
                 this.error = error;
                 return this;
             }
-            ({value, warning} = methods[name](value));
-            this.warning += (warning || "");
+            const result = methods[name](value);
+            value = result.value;
+            this.warning += (result.warning || "");
             return {value};
         } else if (this.string[0] === "(") {
             this.string = this.string.slice(1);

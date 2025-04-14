@@ -35,17 +35,16 @@ logNames.forEach(name => {
     };
     methods[name] = fn;
 });
-const warning = "diverges at 0.";
 reciprocals.forEach(([name, invName], i) => {
     ["", "h"].forEach(suffix => {
         const fn = x => {
             const result = {value: 1 / Math[invName + suffix](x)};
-            const needsWarning = (!x && !i) ? {warning} : {};
+            const warning = (!x && i) ? {warning: `${name}${suffix}(${x}) = ${result.value}.`} : {};
             return {...result, ...warning};
         }
         const afn = x => {
             const result = {value: Math["a" + invName + suffix](1 / x)};
-            const needsWarning = (!x && !i) ? {warning} : {};
+            const warning = (!x && i) ? {warning: `a${name}${suffix}(${x}) = ${result.value}.`} : {};
             return {...result, ...warning};
         }
         methods[name + suffix] = fn;

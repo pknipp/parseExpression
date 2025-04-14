@@ -1,6 +1,6 @@
 const { ParseExpression } = require('./parseExpression.js');
 
-const str = "2sin(2asin(sin(PI/6)-1))";
+const str = "2sin(2asin(csc(0)-1))";
 const parser = new ParseExpression(str);
 parser.loadEMDAS().evalEMDAS();
 const {warning, error} = parser;
