@@ -25,17 +25,14 @@ const processArg = expr => {
 			let result = loadEMDAS(arg);
 			if (result.message) return result;
 			result = evalEMDAS(result);
-			if (result.message) return result;
-			const {value} = result;
-			return {value: result.value, expression};
+			return {...result, expression};
 		}
 	}
 	return {message: `No closing parenthesis was found for string: (${expr}`};
 }
 
-const getValue = expressionIn => {
-	if (!expressionIn) return {message: "Your expression truncates prematurely."};
-	let expression = expressionIn;
+const getValue = expression => {
+	if (!expression) return {message: "Your expression truncates prematurely."};
 	if (methodLetters.has(expression[0])) {
 		let parts = expression.split("(");
 		const methodName = parts[0];
