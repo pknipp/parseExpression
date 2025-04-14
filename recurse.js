@@ -1,12 +1,7 @@
 const { evalEMDAS } = require('./evalEMDAS.js');
-const { methodNames } = require('./methodNames.js');
-const methodLetters = methodNames.reduce((methodLetters, name) => {
-	methodLetters.add(name[0]);
-	return methodLetters;
-}, new Set());
+const { methods, methodLetters } = require('./unaries.js');
 
-// This declaration hoisting is needed because of this fn's recursive call in getValue.
-// let loadEMDAS;
+const PI = 2 * Math.asin(1);
 
 const isNumeric = str => {
 	const num = Number(str);
@@ -32,10 +27,10 @@ const getValue = expression => {
 	if (!expression) return {message: "Your expression truncates prematurely."};
 	if (methodLetters.has(expression[0])) {
 		let parts = expression.split("(");
-		const methodName = parts[0];
+		const name = parts[0];
 		let result = processArg(parts.slice(1).join("("));
 		if (result.message) return result;
-		result.value = Math[methodName](result.value);
+		result.value = methods[name](result.value).value;
 		return result;
 	} else if (expression[0] === "(") {
 		return processArg(expression.slice(1));
@@ -58,9 +53,9 @@ const getValue = expression => {
 	}
 }
 
-const loadEMDAS = expressionIn => {
-	if (!expressionIn) return {message: "Expression is empty."};
-	let expression = expressionIn;
+const loadEMDAS = expression => {
+	if (!expression) return {message: "Expression is empty."};
+	expression = expression.split("PI").join(`(${PI})`);
 	// The following changes corner cases like -(2+3) to 0-(2+3)
 	if (expression[0] === "-") expression = "0" + expression;
 	// Elements of these two arrays are interleaved: val/op/val/op.../op/val
@@ -83,5 +78,5 @@ const loadEMDAS = expressionIn => {
 	return {vals, ops};
 }
 
-const str = "1+2sin(1)-5";
+const str = "acsch(0)";
 console.log("str/evalEMDAS = ", str, evalEMDAS(loadEMDAS(str)));
