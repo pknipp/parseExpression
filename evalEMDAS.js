@@ -4,18 +4,21 @@ const binary = (x1, op, x2) => {
     if (op === '+') return {value: x1 + x2};
     if (op === '-') return {value: x1 - x2};
     if (op === '*') return {value: x1 * x2};
-    if (op === '/') {
-        if (x2) return {value: x1 / x2};
-        if (!x2) return {message: `divide by zero attempt: ${x1} / 0`};
-    }
+    if (op === '/') return {value: x1 / x2};
+        // if (x2) return {value: x1 / x2};
+        // if (!x2) return {message: `divide by zero attempt: ${x1} / 0`};
+    // }
     if (op === "^") {
-        if (x2) return {value: x1 ** x2};
-        if (!x2) return {message: `meaningless operation: ${x1} ^ 0`};
+        if (x1) return {value: x1 ** x2};
+        if (!x1 && x2 > 0) return {value: 0};
+        if (x1 > 0) return {value: x1 ** x2};
+        if (!x1 && x2 ) return {message: `meaningless operation: ${x1} ^ 0`};
     }
     return {message: `no such op: ${op}`};
 }
 
 const evalEMDAS = valsAndOps => {
+    if (valsAndOps.message) return valsAndOps;
     const {ops: opsIn, vals: valsIn} = valsAndOps;
     let [ops, vals] = [[...opsIn], [...valsIn]];
     if (ops.length !== valsIn.length - 1) return {message: "array-length mismatch"};

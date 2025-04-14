@@ -23,7 +23,7 @@ const methodNames = [
     "exp",
     "expm1",
     "floor",
-    "log",
+    "log", // pole
     "log10", // pole
     "log1p", // pole
     "log2", // pole

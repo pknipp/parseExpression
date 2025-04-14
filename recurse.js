@@ -22,10 +22,7 @@ const processArg = expr => {
 		if (char === ")") nParen--;
 		if (!nParen) {
 			const [arg, expression] = [expr.slice(0	, i), expr.slice(i + 1)];
-			let result = loadEMDAS(arg);
-			if (result.message) return result;
-			result = evalEMDAS(result);
-			return {...result, expression};
+			return {...evalEMDAS(loadEMDAS(arg)), expression};
 		}
 	}
 	return {message: `No closing parenthesis was found for string: (${expr}`};
@@ -75,7 +72,7 @@ const loadEMDAS = expressionIn => {
 	while (expression) {
 		let [char, i] = [expression[0], 1];
 		// The following handles implied multiplication.
-		if (char === "(") [char, i] = ["*", 0];
+		if (char === "(" || methodLetters.has(char)) [char, i] = ["*", 0];
 		ops.push(char);
 		expression = expression.slice(i);
 		result = getValue(expression);
@@ -86,5 +83,5 @@ const loadEMDAS = expressionIn => {
 	return {vals, ops};
 }
 
-const str = "1+2(exp(3+1)^2)-5";
+const str = "1+2sin(1)-5";
 console.log("str/evalEMDAS = ", str, evalEMDAS(loadEMDAS(str)));
