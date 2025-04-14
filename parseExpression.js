@@ -34,31 +34,31 @@ class ParseExpression {
     }
 
     processArg() {
-        // The leading (open)paren has been found by calling function.
+        // The leading (open)paren has been found and removed by calling function.
         let nParen = 1;
         for (let i = 0; i < this.string.length; i++) {
             const char = this.string[i];
             if (char === "(") nParen++;
             if (char === ")") nParen--;
             if (!nParen) {
-                this.string = this.string.slice(i + 1);
                 const argExpression = new ParseExpression(this.string.slice(0, i));
+                this.string = this.string.slice(i + 1);
                 argExpression.loadEMDAS();
-                if (argExpression.warning) this.warning += (argExpression.warning || "");
-                if (argExpression.error) {
-                    this.error = argExpression.error;
-                    return;
-                }
-                argExpression.evalEMDAS();
-                if (argExpression.warning) this.warning = (argExpression.warning || "");
+                this.warning += (argExpression.warning || "");
                 if (argExpression.error) {
                     this.error = argExpression.error;
                     return this;
                 }
-                return {value: argExpression.value};
+                argExpression.evalEMDAS();
+                this.warning = (argExpression.warning || "");
+                if (argExpression.error) {
+                    this.error = argExpression.error;
+                    return this;
+                }
+                return {value: argExpression.vals[0]};
             }
         }
-        this.error = `No closing parenthesis was found for string: (${string}`;
+        this.error = `No closing parenthesis was found for string: ${this.string}`;
         return this;
     }
 
@@ -71,19 +71,28 @@ class ParseExpression {
             let parts = this.string.split("(");
             const name = parts[0];
             if (!methods.hasOwnProperty(name)) {
-                this.error = {error: `unknown function: ${name}.`};
+                this.error = `unknown function: ${name}.`;
                 return this;
             }
-            let result = processArg(parts.slice(1).join("("));
-            if (result.warning) this.warning += (result.warning || "");
-            if (result.error) {
-                this.error = result.error;
+            this.string = parts.slice(1).join("(");
+            let {warning, error, value} = this.processArg();
+            this.warning += (warning || "");
+            if (error) {
+                this.error = error;
                 return this;
             }
-            result.value = methods[name](result.value).value;
-            return result;
+            ({value, warning} = methods[name](value));
+            this.warning += (warning || "");
+            return {value};
         } else if (this.string[0] === "(") {
-            return processArg(this.string.slice(1));
+            this.string = this.string.slice(1);
+            const {warning, error, value} = this.processArg();
+            this.warning += (warning || "");
+            if (error) {
+                this.error = error;
+                return this;
+            }
+            return {value};
         } else {
             let p = 1; // index which tracks progress thru expression
             let xStr, value;
@@ -95,8 +104,9 @@ class ParseExpression {
                 }
                 p++;
             }
-            if (value === undefined) return {
-                error: `cannot find a number when parsing ${this.string} from left to right`,
+            if (value === undefined) {
+                this.error = `cannot find a number when parsing ${this.string} from left to right`;
+                return this;
             }
             this.string = this.string.slice(p - 1);
             return {value};
@@ -112,6 +122,8 @@ class ParseExpression {
         // The following changes corner cases like -(2+3) to 0-(2+3)
         if (this.string[0] === "-") this.string = "0" + this.string;
         // Elements of these two arrays are interleaved: val/op/val/op.../op/val
+
+        // First val:
         let result = this.getValue();
         this.warning += (result.warning || "");
         if (result.error) {
@@ -119,6 +131,8 @@ class ParseExpression {
             return this;
         }
         this.vals.push(result.value);
+
+        // Remaining op-val pairs:
         while (this.string) {
             let [char, i] = [this.string[0], 1];
             // The following handles implied multiplication.
@@ -151,6 +165,7 @@ class ParseExpression {
             } else {
                 // perform this operation NOW, because of EMDAS rule
                 const result = binary(this.vals[index], this.ops[index], this.vals[index + 1]);
+                this.warning += (result.warning || "");
                 if (result.error) {
                     this.error = result.error;
                     return this;
@@ -160,11 +175,8 @@ class ParseExpression {
                 index -= (index ? 1 : 0);
             }
         }
-        return this;
+        return this.vals[0];
     }
-
-    // const str = "san(0)";
-    // console.log("str/evalEMDAS = ", str, evalEMDAS(loadEMDAS(str)));
 }
 
 module.exports = { ParseExpression };
