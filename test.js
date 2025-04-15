@@ -1,7 +1,6 @@
 const { ParseExpression } = require('./parseExpression.js');
 
-const str = "1/0+0^0+log(-0.5)+asin(2)+asec(-0.5)+acsch(-1)+acot(0)";
-console.log("str = ", str);
+const str = "+1/0+0^0+log(-0.5)+asin(2)+asec(-0.5)+acsch(-1)+acot(0)";
 const parser = new ParseExpression(str);
 parser.loadEMDAS().evalEMDAS();
 const {warnings, error} = parser;

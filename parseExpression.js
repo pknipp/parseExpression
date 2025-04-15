@@ -1,34 +1,4 @@
-const { methods, methodLetters } = require('./unaries.js');
-
-const [PI, E] = ["PI", "E"].map(name => Math[name]);
-const precedence = op => op === '^' ? 2 : ['*', '/'].includes(op) ? 1 : 0;
-const isNumeric = str => {
-	const num = Number(str);
-	return !isNaN(num) && isFinite(num);
-}
-const binary = (x1, op, x2) => {
-    if (op === '+') return {value: x1 + x2};
-    if (op === '-') return {value: x1 - x2};
-    if (op === '*') return {value: x1 * x2};
-    if (op === '/') {
-        const result = {value: x1 / x2};
-        const warnings = x2 ? [] : [`${x1}/${x2} = ${result.value}`];
-        return {...result, warnings};
-    }
-    if (op === "^") {
-        let warning = `(${x1}) ** ${x2} `;
-        const result = {value: x1 ** x2};
-        warning = (!x1 && x2 < 0)
-            ? `${warning}${result.value}`
-                : (x1 < 0 && !Number.isInteger(x2))
-                ? `${warning}{result.value}`
-                    : (!x1 && !x2)
-                    ? `${warning}is ambiguous.`
-                        : null;
-        return {...result, warnings: warning ? [warning] : []};
-    }
-    return {error: `no such op: ${op}`};
-}
+const { methods, methodLetters, binary, PI, E, isNumeric, precedence } = require('./utils.js');
 
 class ParseExpression {
     constructor(string) {
@@ -126,8 +96,10 @@ class ParseExpression {
         this.string = this.string.split("PI").join(`(${PI})`).split("E").join(`(${E})`);
         // The following changes corner cases like -(2+3) to 0-(2+3)
         if (this.string[0] === "-") this.string = "0" + this.string;
-        // Elements of these two arrays are interleaved: val/op/val/op.../op/val
+        // A leading "+" can be removed w/no adverse effects.
+        if (this.string[0] === "+") this.string = this.string.slice(1);
 
+        // Elements of these two arrays are interleaved: val/op/val/op.../op/val
         // First val:
         let result = this.getValue();
         if (result.error) {
