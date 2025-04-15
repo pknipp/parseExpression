@@ -1,6 +1,6 @@
 const { methods, methodLetters } = require('./unaries.js');
 
-const PI = 2 * Math.asin(1);
+const [PI, E] = ["PI", "E"].map(name => Math[name]);
 const precedence = op => op === '^' ? 2 : ['*', '/'].includes(op) ? 1 : 0;
 const isNumeric = str => {
 	const num = Number(str);
@@ -12,20 +12,20 @@ const binary = (x1, op, x2) => {
     if (op === '*') return {value: x1 * x2};
     if (op === '/') {
         const result = {value: x1 / x2};
-        const warning = x2 ? {} : {warning: `${x1}/${x2} = ${result.value}`};
-        return {...result, ...warning};
+        const warnings = x2 ? [] : [`${x1}/${x2} = ${result.value}`];
+        return {...result, warnings};
     }
     if (op === "^") {
         let warning = `(${x1}) ** ${x2} `;
         const result = {value: x1 ** x2};
         warning = (!x1 && x2 < 0)
-            ? {warning: warning + `${result.value}`}
+            ? `${warning}${result.value}`
                 : (x1 < 0 && !Number.isInteger(x2))
-                ? {warning: warning + `{result.value}`}
+                ? `${warning}{result.value}`
                     : (!x1 && !x2)
-                    ? {warning: warning + "is ambiguous."}
-                        : {};
-        return {...result, ...warning};
+                    ? `${warning}is ambiguous.`
+                        : null;
+        return {...result, warnings: warning ? [warning] : []};
     }
     return {error: `no such op: ${op}`};
 }
@@ -35,7 +35,7 @@ class ParseExpression {
         this.string = string;
         this.vals = [];
         this.ops = [];
-        this.warning = "";
+        this.warnings = [];
         this.error = "";
     }
 
@@ -50,13 +50,14 @@ class ParseExpression {
                 const argExpression = new ParseExpression(this.string.slice(0, i));
                 this.string = this.string.slice(i + 1);
                 argExpression.loadEMDAS();
-                this.warning += (argExpression.warning || "");
+                // console.log("argExpression.warnings = ", argExpression.warnings);
+                this.warnings.push(...argExpression.warnings);
                 if (argExpression.error) {
                     this.error = argExpression.error;
                     return this;
                 }
                 argExpression.evalEMDAS();
-                this.warning += (argExpression.warning || "");
+                this.warnings.push(...argExpression.warnings);
                 if (argExpression.error) {
                     this.error = argExpression.error;
                     return this;
@@ -81,20 +82,18 @@ class ParseExpression {
                 return this;
             }
             this.string = parts.slice(1).join("(");
-            let {warning, error, value} = this.processArg();
-            this.warning += (warning || "");
+            let {error, value} = this.processArg();
             if (error) {
                 this.error = error;
                 return this;
             }
             const result = methods[name](value);
             value = result.value;
-            this.warning += (result.warning || "");
+            this.warnings.push(result.warnings);
             return {value};
         } else if (this.string[0] === "(") {
             this.string = this.string.slice(1);
-            const {warning, error, value} = this.processArg();
-            this.warning += (warning || "");
+            const {error, value} = this.processArg();
             if (error) {
                 this.error = error;
                 return this;
@@ -125,14 +124,13 @@ class ParseExpression {
             this.error = "Expression is empty.";
             return this;
         }
-        this.string = this.string.split("PI").join(`(${PI})`);
+        this.string = this.string.split("PI").join(`(${PI})`).split("E").join(`(${E})`);
         // The following changes corner cases like -(2+3) to 0-(2+3)
         if (this.string[0] === "-") this.string = "0" + this.string;
         // Elements of these two arrays are interleaved: val/op/val/op.../op/val
 
         // First val:
         let result = this.getValue();
-        this.warning += (result.warning || "");
         if (result.error) {
             this.error = result.error;
             return this;
@@ -147,7 +145,9 @@ class ParseExpression {
             this.ops.push(char);
             this.string = this.string.slice(i);
             result = this.getValue();
-            this.warning += (result.warning || "");
+            // console.log("result = ", result);
+            // console.log("this.warnings = ", this.warnings);
+            // this.warnings.push(...result.warnings);
             if (result.error) {
                 this.error = result.error;
                 return this;
@@ -172,7 +172,7 @@ class ParseExpression {
             } else {
                 // perform this operation NOW, because of EMDAS rule
                 const result = binary(this.vals[index], this.ops[index], this.vals[index + 1]);
-                this.warning += (result.warning || "");
+                if (result.warning) this.warnings.push(result.warning);
                 if (result.error) {
                     this.error = result.error;
                     return this;

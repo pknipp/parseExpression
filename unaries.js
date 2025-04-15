@@ -1,5 +1,14 @@
+const isGood = x => !isNaN(x) && isFinite(x);
+
 const logNames = ["log", "log10", "log1p", "log2"];
-const reciprocals = [["sec", "cos"], ["csc", "sin"], ["cot", "tan"]];
+const reciprocals = [
+    ["sec", "cos"],
+    ["csc", "sin"],
+    ["cot", "tan"],
+    // ["cos", "sec"],
+    // ["sin", "csc"],
+    // ["tan", "cot"],
+];
 const nonLogNames = [
     "abs",
     "acos",
@@ -30,7 +39,7 @@ nonLogNames.forEach(name => (methods[name] = x => ({value: Math[name](x)})));
 logNames.forEach(name => {
     const fn = x => {
         const result = {value: Math[name](x)};
-        if (!x) result.warning = "Logarithm diverges at 0.";
+        result.warnings = !x ? ["Logarithm diverges at 0."] : [];
         return result;
     };
     methods[name] = fn;
@@ -39,14 +48,14 @@ reciprocals.forEach(([name, invName], i) => {
     ["", "h"].forEach(suffix => {
         const fn = x => {
             const result = {value: 1 / Math[invName + suffix](x)};
-            const warning = (!x && i) ? {warning: `${name}${suffix}(${x}) = ${result.value}.`} : {};
-            return {...result, ...warning};
-        }
+            result.warnings = (isGood(result.value)) ? [`${name}${suffix}(${x}) = ${result.value}.`] : [];
+            return result;
+        };
         const afn = x => {
             const result = {value: Math["a" + invName + suffix](1 / x)};
-            const warning = (!x && i) ? {warning: `a${name}${suffix}(${x}) = ${result.value}.`} : {};
-            return {...result, ...warning};
-        }
+            result.warnings = (isGood(result.value)) ? [`a${name}${suffix}(${x}) = ${result.value}.`] : [];
+            return result;
+        };
         methods[name + suffix] = fn;
         methods["a" + name + suffix] = afn;
     });
