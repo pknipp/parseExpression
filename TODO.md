@@ -1,5 +1,3 @@
 - translate js to ts
-- convert to object-orientation
 - enable and/or require use of bracket and brace?
-- allow 
 - make this an npm module
