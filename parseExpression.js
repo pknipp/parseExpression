@@ -50,7 +50,6 @@ class ParseExpression {
                 const argExpression = new ParseExpression(this.string.slice(0, i));
                 this.string = this.string.slice(i + 1);
                 argExpression.loadEMDAS();
-                // console.log("argExpression.warnings = ", argExpression.warnings);
                 this.warnings.push(...argExpression.warnings);
                 if (argExpression.error) {
                     this.error = argExpression.error;
@@ -89,7 +88,7 @@ class ParseExpression {
             }
             const result = methods[name](value);
             value = result.value;
-            this.warnings.push(result.warnings);
+            this.warnings.push(...result.warnings);
             return {value};
         } else if (this.string[0] === "(") {
             this.string = this.string.slice(1);
@@ -145,9 +144,6 @@ class ParseExpression {
             this.ops.push(char);
             this.string = this.string.slice(i);
             result = this.getValue();
-            // console.log("result = ", result);
-            // console.log("this.warnings = ", this.warnings);
-            // this.warnings.push(...result.warnings);
             if (result.error) {
                 this.error = result.error;
                 return this;
@@ -172,7 +168,7 @@ class ParseExpression {
             } else {
                 // perform this operation NOW, because of EMDAS rule
                 const result = binary(this.vals[index], this.ops[index], this.vals[index + 1]);
-                if (result.warning) this.warnings.push(result.warning);
+                this.warnings.push(...result.warnings || []);
                 if (result.error) {
                     this.error = result.error;
                     return this;

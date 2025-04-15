@@ -1,37 +1,10 @@
-const isGood = x => !isNaN(x) && isFinite(x);
+const isBad = x => isNaN(x) || !isFinite(x);
 
 const logNames = ["log", "log10", "log1p", "log2"];
+const nonLogNames = ["abs", "cbrt", "ceil", "exp", "expm1", "floor", "round", "sign", "sqrt", "trunc"];
 const reciprocals = [
-    ["sec", "cos"],
-    ["csc", "sin"],
-    ["cot", "tan"],
-    // ["cos", "sec"],
-    // ["sin", "csc"],
-    // ["tan", "cot"],
-];
-const nonLogNames = [
-    "abs",
-    "acos",
-    "acosh",
-    "asin",
-    "asinh",
-    "atan",
-    "atanh",
-    "cbrt",
-    "ceil",
-    "cos",
-    "cosh",
-    "exp",
-    "expm1",
-    "floor",
-    "round",
-    "sign",
-    "sin",
-    "sinh",
-    "sqrt",
-    "tan",
-    "tanh",
-    "trunc",
+    ["sin", "csc"], ["cos", "sec"], ["tan", "cot"],
+    ["csc", "sin"], ["sec", "cos"], ["cot", "tan"],
 ];
 
 const methods = {};
@@ -44,20 +17,21 @@ logNames.forEach(name => {
     };
     methods[name] = fn;
 });
+
 reciprocals.forEach(([name, invName], i) => {
     ["", "h"].forEach(suffix => {
-        const fn = x => {
-            const result = {value: 1 / Math[invName + suffix](x)};
-            result.warnings = (isGood(result.value)) ? [`${name}${suffix}(${x}) = ${result.value}.`] : [];
+        let fullName = name + suffix;
+        methods[fullName] = x => {
+            const result = {value: (Math[fullName] !== undefined) ? Math[fullName](x) : 1 / Math[invName + suffix](x)};
+            result.warnings = (isBad(result.value)) ? [`${name}${suffix}(${x}) = ${result.value}.`] : [];
             return result;
         };
-        const afn = x => {
-            const result = {value: Math["a" + invName + suffix](1 / x)};
-            result.warnings = (isGood(result.value)) ? [`a${name}${suffix}(${x}) = ${result.value}.`] : [];
+        fullName = "a" + fullName;
+        methods["a" + name + suffix] = x => {
+            const result = {value: ((Math[fullName] !== undefined) ? (Math[fullName](x)) : (Math["a" + invName + suffix](1 / x)))};
+            result.warnings = (isBad(result.value)) ? [`a${name}${suffix}(${x}) = ${result.value}.`] : [];
             return result;
         };
-        methods[name + suffix] = fn;
-        methods["a" + name + suffix] = afn;
     });
 });
 

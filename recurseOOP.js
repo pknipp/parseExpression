@@ -1,10 +1,13 @@
 const { ParseExpression } = require('./parseExpression.js');
 
-const str = "1/0+0^0+asin(2)+acos(-1)+acsc(0.5)+acosh(-0.5)+asech(-1)+csc(0)";
+const str = "1/0+0^0+log(-0.5)+asin(2)+asec(-0.5)+acsch(-1)+acot(0)";
+console.log("str = ", str);
 const parser = new ParseExpression(str);
 parser.loadEMDAS().evalEMDAS();
 const {warnings, error} = parser;
 console.log("input: ", str);
 console.log("output: ", error ? {error} : parser.vals[0]);
-console.log("warnings.length = ", warnings.length);
-if (warnings.length) warnings.forEach(warning => console.log(warning));
+if (warnings.length) {
+    console.log("WARNINGS:");
+    warnings.forEach(warning => console.log(warning));
+}
