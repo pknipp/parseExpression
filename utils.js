@@ -6,22 +6,14 @@ const reciprocals = [
     ["csc", "sin"], ["sec", "cos"], ["cot", "tan"],
 ];
 
-const isBad = x => isNaN(x) || !isFinite(x);
+const isGood = x => !isNaN(x) && isFinite(x);
+const isNumeric = str => isGood(Number(str));
 const precedence = op => op === '^' ? 2 : ['*', '/'].includes(op) ? 1 : 0;
-const isNumeric = str => {
-	const num = Number(str);
-	return !isNaN(num) && isFinite(num);
-}
 
 const methods = {};
 nonLogNames.forEach(name => (methods[name] = x => ({value: Math[name](x)})));
 logNames.forEach(name => {
-    const fn = x => {
-        const result = {value: Math[name](x)};
-        result.warnings = !x ? ["Logarithm diverges at 0."] : [];
-        return result;
-    };
-    methods[name] = fn;
+    methods[name] = x => ({value: Math[name](x), warnings: !x ? ["Logarithm diverges at 0."] : []});
 });
 reciprocals.forEach(([name, invName], i) => {
     ["", "h"].forEach(suffix => {
@@ -29,14 +21,14 @@ reciprocals.forEach(([name, invName], i) => {
         let fInvName = invName + suffix;
         methods[fName] = x => {
             const result = {value: (Math[fName] !== undefined) ? Math[fName](x) : 1 / Math[fInvName](x)};
-            result.warnings = (isBad(result.value)) ? [`${fName}(${x}) = ${result.value}.`] : [];
+            result.warnings = (!isGood(result.value)) ? [`${fName}(${x}) = ${result.value}.`] : [];
             return result;
         };
         fName = "a" + fName;
         fInvName = "a" + fInvName;
         methods[fName] = x => {
             const result = {value: ((Math[fName] !== undefined) ? (Math[fName](x)) : (Math[fInvName](1 / x)))};
-            result.warnings = (isBad(result.value)) ? [`${fName}(${x}) = ${result.value}.`] : [];
+            result.warnings = (!isGood(result.value)) ? [`${fName}(${x}) = ${result.value}.`] : [];
             return result;
         };
     });

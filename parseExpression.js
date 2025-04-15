@@ -1,4 +1,12 @@
-const { methods, methodLetters, binary, PI, E, isNumeric, precedence } = require('./utils.js');
+const {
+    methods,
+    methodLetters,
+    binary,
+    PI,
+    E,
+    isNumeric,
+    precedence,
+} = require('./utils.js');
 
 class ParseExpression {
     constructor(string) {
@@ -93,7 +101,8 @@ class ParseExpression {
             this.error = "Expression is empty.";
             return this;
         }
-        this.string = this.string.split("PI").join(`(${PI})`).split("E").join(`(${E})`);
+        // Replace PI and E by their numerical values, and replace ** by ^ (to simplify parsing).
+        this.string = this.string.split("PI").join(`(${PI})`).split("E").join(`(${E}).split("**").join("^")`);
         // The following changes corner cases like -(2+3) to 0-(2+3)
         if (this.string[0] === "-") this.string = "0" + this.string;
         // A leading "+" can be removed w/no adverse effects.
@@ -101,12 +110,12 @@ class ParseExpression {
 
         // Elements of these two arrays are interleaved: val/op/val/op.../op/val
         // First val:
-        let result = this.getValue();
-        if (result.error) {
-            this.error = result.error;
+        let {error, value} = this.getValue();
+        if (error) {
+            this.error = error;
             return this;
         }
-        this.vals.push(result.value);
+        this.vals.push(value);
 
         // Remaining op-val pairs:
         while (this.string) {
@@ -115,12 +124,12 @@ class ParseExpression {
             if (char === "(" || methodLetters.has(char)) [char, i] = ["*", 0];
             this.ops.push(char);
             this.string = this.string.slice(i);
-            result = this.getValue();
-            if (result.error) {
-                this.error = result.error;
+            ({error, value} = this.getValue());
+            if (error) {
+                this.error = error;
                 return this;
             }
-            this.vals.push(result.value);
+            this.vals.push(value);
         }
         return this;
     }
@@ -139,13 +148,15 @@ class ParseExpression {
                 index++;
             } else {
                 // perform this operation NOW, because of EMDAS rule
-                const result = binary(this.vals[index], this.ops[index], this.vals[index + 1]);
-                this.warnings.push(...result.warnings || []);
-                if (result.error) {
-                    this.error = result.error;
+                const {error, value, warnings} = binary(this.vals[index], this.ops[index], this.vals[index + 1]);
+                this.warnings.push(...warnings || []);
+                if (error) {
+                    this.error = error;
                     return this;
                 }
-                this.vals.splice(index, 2, result.value);
+                // Replace two values by one: that returned by the binary operation.
+                this.vals.splice(index, 2, value);
+                // Remove the operator that was just used in the binary operation.
                 this.ops.splice(index, 1);
                 index -= (index ? 1 : 0);
             }
@@ -154,4 +165,4 @@ class ParseExpression {
     }
 }
 
-module.exports = { ParseExpression };
+module.exports = ParseExpression;
