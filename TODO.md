@@ -1,3 +1,3 @@
-- translate js to ts
+- translate js to ts?
 - enable and/or require use of bracket and brace?
 - make this an npm module
