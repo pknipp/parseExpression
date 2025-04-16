@@ -17,18 +17,18 @@ logNames.forEach(name => {
 });
 reciprocals.forEach(([name, invName], i) => {
     ["", "h"].forEach(suffix => {
-        let fName = name + suffix;
-        let fInvName = invName + suffix;
-        methods[fName] = x => {
-            const result = {value: (Math[fName] !== undefined) ? Math[fName](x) : 1 / Math[fInvName](x)};
-            result.warnings = (!isGood(result.value)) ? [`${fName}(${x}) = ${result.value}.`] : [];
+        let fName0 = name + suffix;
+        let fInvName0 = invName + suffix;
+        methods[fName0] = x => {
+            const result = {value: (Math[fName0] !== undefined) ? Math[fName0](x) : 1 / Math[fInvName0](x)};
+            result.warnings = (!isGood(result.value)) ? [`${fName0}(${x}) = ${result.value}.`] : [];
             return result;
         };
-        fName = "a" + fName;
-        fInvName = "a" + fInvName;
-        methods[fName] = x => {
-            const result = {value: ((Math[fName] !== undefined) ? (Math[fName](x)) : (Math[fInvName](1 / x)))};
-            result.warnings = (!isGood(result.value)) ? [`${fName}(${x}) = ${result.value}.`] : [];
+        let fName1 = "a" + fName0;
+        let fInvName1 = "a" + fInvName0;
+        methods[fName1] = x => {
+            const result = {value: ((Math[fName1] !== undefined) ? (Math[fName1](x)) : (Math[fInvName1](1 / x)))};
+            result.warnings = (!isGood(result.value)) ? [`${fName1}(${x}) = ${result.value}.`] : [];
             return result;
         };
     });

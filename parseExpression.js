@@ -60,7 +60,7 @@ class ParseExpression {
             const value = this.processArg();
             if (this.error) return defaultValue;
             const result = methods[name](value);
-            this.warnings.push(...result.warnings);
+            this.warnings.push(...result.warnings || []);
             return result.value;
         } else if (this.string[0] === "(") {
             this.string = this.string.slice(1);
