@@ -1,0 +1,20 @@
+{
+  "name": "parse-expression",
+  "version": "1.0.0",
+  "description": "This converts a string of numbers, unary operators, binary operators, and parens to a number.",
+  "main": "parseExpression.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pknipp/parseExpression.git"
+  },
+  "keywords": ["parse", "string", "expression", "unary"],
+  "author": "Peter Knipp",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pknipp/parseExpression/issues"
+  },
+  "homepage": "https://github.com/pknipp/parseExpression#readme"
+}

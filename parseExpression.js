@@ -18,6 +18,7 @@ class ParseExpression {
     }
 
     processArg() {
+        const defaultValue = 0; // This gets overwritten in case of no errors.
         // The leading (open)paren has been found and removed by calling function.
         let nParen = 1;
         for (let i = 0; i < this.string.length; i++) {
@@ -29,53 +30,42 @@ class ParseExpression {
                 this.string = this.string.slice(i + 1);
                 argExpression.loadEMDAS();
                 this.warnings.push(...argExpression.warnings);
-                if (argExpression.error) {
-                    this.error = argExpression.error;
-                    return this;
-                }
+                this.error = argExpression.error;
+                if (this.error) return defaultValue;
                 argExpression.evalEMDAS();
                 this.warnings.push(...argExpression.warnings);
-                if (argExpression.error) {
-                    this.error = argExpression.error;
-                    return this;
-                }
-                return {value: argExpression.vals[0]};
+                this.error = argExpression.error;
+                if (this.error) return defaultValue;
+                return argExpression.vals[0];
             }
         }
         this.error = `No closing parenthesis was found for string: ${this.string}`;
-        return this;
+        return defaultValue;
     }
 
     getValue() {
+        const defaultValue = 0;
         if (!this.string) {
             this.error = "Your expression truncates prematurely.";
-            return this;
+            return defaultValue;
         }
         if (methodLetters.has(this.string[0])) {
             let parts = this.string.split("(");
             const name = parts[0];
             if (!methods.hasOwnProperty(name)) {
-                this.error = `unknown function: ${name}.`;
-                return this;
+                this.error = `unknown function: ${name}`;
+                return defaultValue;
             }
             this.string = parts.slice(1).join("(");
-            let {error, value} = this.processArg();
-            if (error) {
-                this.error = error;
-                return this;
-            }
+            const value = this.processArg();
+            if (this.error) return defaultValue;
             const result = methods[name](value);
-            value = result.value;
             this.warnings.push(...result.warnings);
-            return {value};
+            return result.value;
         } else if (this.string[0] === "(") {
             this.string = this.string.slice(1);
-            const {error, value} = this.processArg();
-            if (error) {
-                this.error = error;
-                return this;
-            }
-            return {value};
+            const value = this.processArg();
+            return (this.error) ? defaultValue : value;
         } else {
             let p = 1; // index which tracks progress thru expression
             let xStr, value;
@@ -89,10 +79,10 @@ class ParseExpression {
             }
             if (value === undefined) {
                 this.error = `cannot find a number when parsing ${this.string} from left to right`;
-                return this;
+                return defaultValue;
             }
             this.string = this.string.slice(p - 1);
-            return {value};
+            return value;
         }
     }
 
@@ -110,11 +100,8 @@ class ParseExpression {
 
         // Elements of these two arrays are interleaved: val/op/val/op.../op/val
         // First val:
-        let {error, value} = this.getValue();
-        if (error) {
-            this.error = error;
-            return this;
-        }
+        let value = this.getValue();
+        if (this.error) return this;
         this.vals.push(value);
 
         // Remaining op-val pairs:
@@ -124,11 +111,8 @@ class ParseExpression {
             if (char === "(" || methodLetters.has(char)) [char, i] = ["*", 0];
             this.ops.push(char);
             this.string = this.string.slice(i);
-            ({error, value} = this.getValue());
-            if (error) {
-                this.error = error;
-                return this;
-            }
+            value = this.getValue();
+            if (this.error) return this;
             this.vals.push(value);
         }
         return this;
