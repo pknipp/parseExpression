@@ -60,7 +60,7 @@ class ParseExpression {
             const value = this.processArg();
             if (this.error) return defaultValue;
             const result = methods[name](value);
-            this.warnings.push(...result.warnings || []);
+            this.warnings.push(...result.warnings);
             return result.value;
         } else if (this.string[0] === "(") {
             this.string = this.string.slice(1);
@@ -120,6 +120,7 @@ class ParseExpression {
 
     evalEMDAS() {
         if (this.error) return this;
+        // The following check if probably never needed.
         if (this.ops.length !== this.vals.length - 1) {
             this.error = "array-length mismatch";
             return this;
@@ -134,10 +135,8 @@ class ParseExpression {
                 // perform this operation NOW, because of EMDAS rule
                 const {error, value, warnings} = binary(this.vals[index], this.ops[index], this.vals[index + 1]);
                 this.warnings.push(...warnings || []);
-                if (error) {
-                    this.error = error;
-                    return this;
-                }
+                this.error = error;
+                if (error) return this;
                 // Replace two values by one: that returned by the binary operation.
                 this.vals.splice(index, 2, value);
                 // Remove the operator that was just used in the binary operation.
