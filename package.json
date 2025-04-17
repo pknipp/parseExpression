@@ -1,6 +1,6 @@
 {
   "name": "parse-expression",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "This converts a string of numbers, unary operators, binary operators, and parens to a number.",
   "main": "parseExpression.js",
   "scripts": {

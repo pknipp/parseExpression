@@ -10,6 +10,7 @@ const {
 
 class ParseExpression {
     constructor(string) {
+	this.stringPermanent = string;
         this.string = string;
         this.vals = [];
         this.ops = [];
